@@ -11,7 +11,7 @@ ADMIN_PASS = "88691553"
 DATABASE_URL = "postgresql://trafego_user:GgcNTPBOIucenU5kVj98quHFlv1SqKjj@dpg-d6mrvrp4tr6s738ljfgg-a/trafego"
 
 # -------------------
-# DATABASE CONNECTION
+# DATABASE
 # -------------------
 
 def get_db():
@@ -176,6 +176,18 @@ def dashboard():
     )
 
 # -------------------
+# BUY CREDITS PAGE
+# -------------------
+
+@app.route("/buycredits")
+def buycredits():
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    return render_template("buycredits.html")
+
+# -------------------
 # ADD SITE
 # -------------------
 
@@ -201,7 +213,7 @@ def addsite():
     return redirect("/dashboard")
 
 # -------------------
-# AUTOSURF
+# SURF
 # -------------------
 
 @app.route("/surf")
@@ -259,18 +271,13 @@ def visit(site_id):
         (site_id,)
     )
 
-    c.execute(
-        "INSERT INTO visits(user_id,site_id,timestamp) VALUES (%s,%s,%s)",
-        (session["user_id"],site_id,now)
-    )
-
     conn.commit()
     conn.close()
 
     return redirect("/surf")
 
 # -------------------
-# ADMIN PANEL
+# ADMIN
 # -------------------
 
 @app.route("/admin")
