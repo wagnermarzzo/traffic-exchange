@@ -14,15 +14,40 @@ background:#0f172a;
 color:white;
 }
 
-.top{
+.sidebar{
 
+width:230px;
+height:100vh;
 background:#020617;
+position:fixed;
+
+}
+
+.sidebar h2{
+
+text-align:center;
 padding:20px;
+
+}
+
+.sidebar a{
+
+display:block;
+padding:15px;
+color:white;
+text-decoration:none;
+
+}
+
+.sidebar a:hover{
+
+background:#1e293b;
 
 }
 
 .main{
 
+margin-left:230px;
 padding:40px;
 
 }
@@ -36,16 +61,17 @@ margin-bottom:20px;
 
 }
 
-input{
-padding:8px;
+table{
+
+width:100%;
+border-collapse:collapse;
+
 }
 
-button{
+td{
 
-background:#22c55e;
-border:none;
-padding:10px 20px;
-color:white;
+padding:10px;
+border-bottom:1px solid #334155;
 
 }
 
@@ -55,49 +81,58 @@ color:white;
 
 <body>
 
-<div class="top">
+<div class="sidebar">
 
-<h2>Painel Admin</h2>
+<h2>Admin</h2>
 
-<a href="/dashboard">Voltar Dashboard</a>
+<a href="/admin">Usuários</a>
+
+<a href="/analytics">Analytics</a>
+
+<a href="/dashboard">Dashboard</a>
+
+<a href="/logout">Sair</a>
 
 </div>
 
 <div class="main">
 
-<div class="card">
-
-<h3>Adicionar Créditos</h3>
-
-<form action="/add_credit" method="post">
-
-<input name="email" placeholder="email usuário">
-
-<input name="value" placeholder="créditos">
-
-<button>Adicionar</button>
-
-</form>
-
-</div>
+<h1>Painel Admin</h1>
 
 <div class="card">
 
 <h3>Usuários</h3>
 
+<table>
+
+<tr>
+
+<td>ID</td>
+<td>Usuário</td>
+<td>Créditos</td>
+<td>Views</td>
+
+</tr>
+
 {% for u in users %}
 
-<p>
+<tr>
 
-{{u}} | créditos: {{users[u]["credits"]}}
+<td>{{u[0]}}</td>
+<td>{{u[1]}}</td>
+<td>{{u[3]}}</td>
+<td>{{u[4]}}</td>
 
-</p>
+</tr>
 
 {% endfor %}
+
+</table>
 
 </div>
 
 </div>
 
 </body>
-</html>
+
+  </html>
