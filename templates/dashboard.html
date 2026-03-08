@@ -2,9 +2,14 @@
 
 <h1>Dashboard</h1>
 
-<p>Créditos: {{credits}}</p>
+<div class="card">
 
-<a href="/surf">Começar Surf</a>
+<p>Créditos: {{credits}}</p>
+<p>Total Views: {{views}}</p>
+
+</div>
+
+<a href="/surf">Iniciar Autosurf</a>
 
 <br><br>
 
@@ -22,10 +27,16 @@
 
 {% for site in sites %}
 
-<p>{{site[2]}} | Views: {{site[3]}}</p>
+<div class="card">
+
+<p>{{site[2]}}</p>
+<p>Views: {{site[3]}}</p>
+
+</div>
 
 {% endfor %}
 
 <br>
 
+<a href="/ranking">Ranking</a> |
 <a href="/buy">Comprar Créditos</a>
