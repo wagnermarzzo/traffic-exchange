@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+
+<h1>Painel ADMIN</h1>
+
+<a href="/logout">Sair</a>
+
+<h2>Usuários</h2>
+
+<table border="1">
+
+<tr>
+<th>ID</th>
+<th>Usuário</th>
+<th>Créditos</th>
+<th>Adicionar</th>
+<th>Remover</th>
+</tr>
+
+{% for user in users %}
+
+<tr>
+
+<td>{{user[0]}}</td>
+<td>{{user[1]}}</td>
+<td>{{user[2]}}</td>
+
+<td>
+
+<form action="/addcredits/{{user[0]}}" method="post">
+
+<input type="number" name="amount" placeholder="valor">
+
+<button type="submit">+</button>
+
+</form>
+
+</td>
+
+<td>
+
+<form action="/removecredits/{{user[0]}}" method="post">
+
+<input type="number" name="amount" placeholder="valor">
+
+<button type="submit">-</button>
+
+</form>
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+<h2>Sites cadastrados</h2>
+
+<table border="1">
+
+<tr>
+<th>ID</th>
+<th>URL</th>
+<th>User ID</th>
+</tr>
+
+{% for site in sites %}
+
+<tr>
+
+<td>{{site[0]}}</td>
+<td>{{site[1]}}</td>
+<td>{{site[2]}}</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</body>
+
+</html>
