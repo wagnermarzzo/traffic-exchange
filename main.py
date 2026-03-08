@@ -9,9 +9,9 @@ app.secret_key = "troia_secret"
 ADMIN_USER = "Troia"
 ADMIN_PASS = "88691553"
 
-# -------------------
+# -------------------------
 # DATABASE
-# -------------------
+# -------------------------
 
 def init_db():
 
@@ -37,31 +37,22 @@ def init_db():
     )
     """)
 
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS visits(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
-        site_id INTEGER,
-        timestamp INTEGER
-    )
-    """)
-
     conn.commit()
     conn.close()
 
 init_db()
 
-# -------------------
+# -------------------------
 # HOME
-# -------------------
+# -------------------------
 
 @app.route("/")
 def index():
     return render_template("index.html")
 
-# -------------------
+# -------------------------
 # REGISTER
-# -------------------
+# -------------------------
 
 @app.route("/register", methods=["GET","POST"])
 def register():
@@ -86,9 +77,9 @@ def register():
 
     return render_template("register.html")
 
-# -------------------
+# -------------------------
 # LOGIN
-# -------------------
+# -------------------------
 
 @app.route("/login", methods=["GET","POST"])
 def login():
@@ -111,7 +102,6 @@ def login():
         )
 
         user = c.fetchone()
-
         conn.close()
 
         if user:
@@ -123,9 +113,9 @@ def login():
 
     return render_template("login.html")
 
-# -------------------
+# -------------------------
 # DASHBOARD
-# -------------------
+# -------------------------
 
 @app.route("/dashboard")
 def dashboard():
@@ -149,25 +139,19 @@ def dashboard():
 
     conn.close()
 
-    credits = user["credits"]
-    views = user["total_views"]
-
     return render_template(
         "dashboard.html",
-        credits=credits,
-        views=views,
+        credits=user["credits"],
+        views=user["total_views"],
         sites=sites
     )
 
-# -------------------
+# -------------------------
 # ADD SITE
-# -------------------
+# -------------------------
 
 @app.route("/addsite", methods=["POST"])
 def addsite():
-
-    if "user_id" not in session:
-        return redirect("/login")
 
     url = request.form["url"]
 
@@ -184,15 +168,12 @@ def addsite():
 
     return redirect("/dashboard")
 
-# -------------------
+# -------------------------
 # SURF
-# -------------------
+# -------------------------
 
 @app.route("/surf")
 def surf():
-
-    if "user_id" not in session:
-        return redirect("/login")
 
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
@@ -209,32 +190,24 @@ def surf():
 
     return render_template("surf.html",site=site)
 
-# -------------------
+# -------------------------
 # VISIT
-# -------------------
+# -------------------------
 
 @app.route("/visit/<int:site_id>")
 def visit(site_id):
-
-    if "user_id" not in session:
-        return redirect("/login")
 
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
 
     c.execute(
-        "UPDATE users SET credits = credits + 1, total_views = total_views + 1 WHERE id=?",
+        "UPDATE users SET credits=credits+1,total_views=total_views+1 WHERE id=?",
         (session["user_id"],)
     )
 
     c.execute(
-        "UPDATE sites SET views = views + 1 WHERE id=?",
+        "UPDATE sites SET views=views+1 WHERE id=?",
         (site_id,)
-    )
-
-    c.execute(
-        "INSERT INTO visits(user_id,site_id,timestamp) VALUES (?,?,?)",
-        (session["user_id"],site_id,int(time.time()))
     )
 
     conn.commit()
@@ -242,9 +215,9 @@ def visit(site_id):
 
     return redirect("/surf")
 
-# -------------------
+# -------------------------
 # ADMIN
-# -------------------
+# -------------------------
 
 @app.route("/admin")
 def admin():
@@ -262,27 +235,7 @@ def admin():
 
     return render_template("admin.html",users=users)
 
-# -------------------
-# ADD CREDIT ADMIN
-# -------------------
-
-@app.route("/addcredit/<int:user_id>")
-def addcredit(user_id):
-
-    conn = sqlite3.connect("database.db")
-    c = conn.cursor()
-
-    c.execute(
-        "UPDATE users SET credits = credits + 100 WHERE id=?",
-        (user_id,)
-    )
-
-    conn.commit()
-    conn.close()
-
-    return redirect("/admin")
-
-# -------------------
+# -------------------------
 
 if __name__ == "__main__":
     app.run()
