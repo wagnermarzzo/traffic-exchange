@@ -10,16 +10,8 @@ ADMIN_PASS = "88691553"
 
 DATABASE_URL = "postgresql://trafego_user:GgcNTPBOIucenU5kVj98quHFlv1SqKjj@dpg-d6mrvrp4tr6s738ljfgg-a/trafego"
 
-# -------------------
-# DATABASE
-# -------------------
-
 def get_db():
     return psycopg2.connect(DATABASE_URL)
-
-# -------------------
-# INIT DATABASE
-# -------------------
 
 def init_db():
 
@@ -46,31 +38,14 @@ def init_db():
     )
     """)
 
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS visits(
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER,
-        site_id INTEGER,
-        timestamp INTEGER
-    )
-    """)
-
     conn.commit()
     conn.close()
 
 init_db()
 
-# -------------------
-# HOME
-# -------------------
-
 @app.route("/")
 def index():
     return render_template("index.html")
-
-# -------------------
-# REGISTER
-# -------------------
 
 @app.route("/register", methods=["GET","POST"])
 def register():
@@ -95,10 +70,6 @@ def register():
 
     return render_template("register.html")
 
-# -------------------
-# LOGIN
-# -------------------
-
 @app.route("/login", methods=["GET","POST"])
 def login():
 
@@ -108,7 +79,6 @@ def login():
         password = request.form["password"]
 
         if username == ADMIN_USER and password == ADMIN_PASS:
-            session.clear()
             session["admin"] = True
             return redirect("/admin")
 
@@ -121,27 +91,19 @@ def login():
         )
 
         user = c.fetchone()
+
         conn.close()
 
         if user:
-            session.clear()
             session["user_id"] = user[0]
             return redirect("/dashboard")
 
     return render_template("login.html")
 
-# -------------------
-# LOGOUT
-# -------------------
-
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/")
-
-# -------------------
-# DASHBOARD
-# -------------------
 
 @app.route("/dashboard")
 def dashboard():
@@ -175,10 +137,6 @@ def dashboard():
         sites=sites
     )
 
-# -------------------
-# BUY CREDITS PAGE
-# -------------------
-
 @app.route("/buycredits")
 def buycredits():
 
@@ -186,10 +144,6 @@ def buycredits():
         return redirect("/login")
 
     return render_template("buycredits.html")
-
-# -------------------
-# ADD SITE
-# -------------------
 
 @app.route("/addsite", methods=["POST"])
 def addsite():
@@ -212,10 +166,6 @@ def addsite():
 
     return redirect("/dashboard")
 
-# -------------------
-# SURF
-# -------------------
-
 @app.route("/surf")
 def surf():
 
@@ -225,7 +175,8 @@ def surf():
     conn = get_db()
     c = conn.cursor()
 
-    c.execute("SELECT id,url FROM sites ORDER BY views ASC LIMIT 1")
+    c.execute("SELECT id,url FROM sites ORDER BY RANDOM() LIMIT 1")
+
     site = c.fetchone()
 
     conn.close()
@@ -233,11 +184,15 @@ def surf():
     if not site:
         return "Nenhum site cadastrado"
 
-    return render_template("surf.html", site=site)
+    url = site[1]
 
-# -------------------
-# VISIT
-# -------------------
+    if "youtube.com/watch?v=" in url:
+        video = url.split("v=")[1]
+        url = f"https://www.youtube.com/embed/{video}"
+
+    site = (site[0], url)
+
+    return render_template("surf.html", site=site)
 
 @app.route("/visit/<int:site_id>")
 def visit(site_id):
@@ -248,18 +203,7 @@ def visit(site_id):
     conn = get_db()
     c = conn.cursor()
 
-    c.execute(
-        "SELECT last_visit FROM users WHERE id=%s",
-        (session["user_id"],)
-    )
-
-    user = c.fetchone()
-
     now = int(time.time())
-
-    if user and now - user[0] < 10:
-        conn.close()
-        return redirect("/surf")
 
     c.execute(
         "UPDATE users SET credits=credits+1,total_views=total_views+1,last_visit=%s WHERE id=%s",
@@ -275,10 +219,6 @@ def visit(site_id):
     conn.close()
 
     return redirect("/surf")
-
-# -------------------
-# ADMIN
-# -------------------
 
 @app.route("/admin")
 def admin():
@@ -296,15 +236,8 @@ def admin():
 
     return render_template("admin.html", users=users)
 
-# -------------------
-# ADMIN ADD CREDITS
-# -------------------
-
 @app.route("/admin/addcredits/<int:user_id>", methods=["POST"])
 def addcredits(user_id):
-
-    if "admin" not in session:
-        return redirect("/login")
 
     amount = request.form["amount"]
 
@@ -321,15 +254,8 @@ def addcredits(user_id):
 
     return redirect("/admin")
 
-# -------------------
-# ADMIN BAN
-# -------------------
-
 @app.route("/admin/ban/<int:user_id>")
 def ban(user_id):
-
-    if "admin" not in session:
-        return redirect("/login")
 
     conn = get_db()
     c = conn.cursor()
@@ -340,8 +266,6 @@ def ban(user_id):
     conn.close()
 
     return redirect("/admin")
-
-# -------------------
 
 if __name__ == "__main__":
     app.run()
