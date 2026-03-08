@@ -1,4 +1,4 @@
-import sqlite3
+import psycopg2
 import time
 from flask import Flask, render_template, request, redirect, session
 
@@ -8,18 +8,27 @@ app.secret_key = "troia_secret"
 ADMIN_USER = "Troia"
 ADMIN_PASS = "88691553"
 
+DATABASE_URL = "postgresql://trafego_user:GgcNTPBOIucenU5kVj98quHFlv1SqKjj@dpg-d6mrvrp4tr6s738ljfgg-a/trafego"
+
 # -------------------
-# DATABASE
+# DATABASE CONNECTION
+# -------------------
+
+def get_db():
+    return psycopg2.connect(DATABASE_URL)
+
+# -------------------
+# INIT DATABASE
 # -------------------
 
 def init_db():
 
-    conn = sqlite3.connect("database.db")
+    conn = get_db()
     c = conn.cursor()
 
     c.execute("""
     CREATE TABLE IF NOT EXISTS users(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         username TEXT,
         password TEXT,
         credits INTEGER DEFAULT 0,
@@ -30,7 +39,7 @@ def init_db():
 
     c.execute("""
     CREATE TABLE IF NOT EXISTS sites(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         user_id INTEGER,
         url TEXT,
         views INTEGER DEFAULT 0
@@ -39,7 +48,7 @@ def init_db():
 
     c.execute("""
     CREATE TABLE IF NOT EXISTS visits(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         user_id INTEGER,
         site_id INTEGER,
         timestamp INTEGER
@@ -71,11 +80,11 @@ def register():
         username = request.form["username"]
         password = request.form["password"]
 
-        conn = sqlite3.connect("database.db")
+        conn = get_db()
         c = conn.cursor()
 
         c.execute(
-            "INSERT INTO users(username,password) VALUES (?,?)",
+            "INSERT INTO users(username,password) VALUES (%s,%s)",
             (username,password)
         )
 
@@ -103,11 +112,11 @@ def login():
             session["admin"] = True
             return redirect("/admin")
 
-        conn = sqlite3.connect("database.db")
+        conn = get_db()
         c = conn.cursor()
 
         c.execute(
-            "SELECT * FROM users WHERE username=? AND password=?",
+            "SELECT * FROM users WHERE username=%s AND password=%s",
             (username,password)
         )
 
@@ -140,26 +149,29 @@ def dashboard():
     if "user_id" not in session:
         return redirect("/login")
 
-    conn = sqlite3.connect("database.db")
-    conn.row_factory = sqlite3.Row
+    conn = get_db()
     c = conn.cursor()
 
-    user = c.execute(
-        "SELECT credits,total_views FROM users WHERE id=?",
+    c.execute(
+        "SELECT credits,total_views FROM users WHERE id=%s",
         (session["user_id"],)
-    ).fetchone()
+    )
 
-    sites = c.execute(
-        "SELECT * FROM sites WHERE user_id=?",
+    user = c.fetchone()
+
+    c.execute(
+        "SELECT * FROM sites WHERE user_id=%s",
         (session["user_id"],)
-    ).fetchall()
+    )
+
+    sites = c.fetchall()
 
     conn.close()
 
     return render_template(
         "dashboard.html",
-        credits=user["credits"],
-        views=user["total_views"],
+        credits=user[0],
+        views=user[1],
         sites=sites
     )
 
@@ -175,11 +187,11 @@ def addsite():
 
     url = request.form["url"]
 
-    conn = sqlite3.connect("database.db")
+    conn = get_db()
     c = conn.cursor()
 
     c.execute(
-        "INSERT INTO sites(user_id,url) VALUES (?,?)",
+        "INSERT INTO sites(user_id,url) VALUES (%s,%s)",
         (session["user_id"],url)
     )
 
@@ -198,7 +210,7 @@ def surf():
     if "user_id" not in session:
         return redirect("/login")
 
-    conn = sqlite3.connect("database.db")
+    conn = get_db()
     c = conn.cursor()
 
     c.execute("SELECT id,url FROM sites ORDER BY views ASC LIMIT 1")
@@ -221,13 +233,15 @@ def visit(site_id):
     if "user_id" not in session:
         return redirect("/login")
 
-    conn = sqlite3.connect("database.db")
+    conn = get_db()
     c = conn.cursor()
 
-    user = c.execute(
-        "SELECT last_visit FROM users WHERE id=?",
+    c.execute(
+        "SELECT last_visit FROM users WHERE id=%s",
         (session["user_id"],)
-    ).fetchone()
+    )
+
+    user = c.fetchone()
 
     now = int(time.time())
 
@@ -236,17 +250,17 @@ def visit(site_id):
         return redirect("/surf")
 
     c.execute(
-        "UPDATE users SET credits=credits+1,total_views=total_views+1,last_visit=? WHERE id=?",
+        "UPDATE users SET credits=credits+1,total_views=total_views+1,last_visit=%s WHERE id=%s",
         (now,session["user_id"])
     )
 
     c.execute(
-        "UPDATE sites SET views=views+1 WHERE id=?",
+        "UPDATE sites SET views=views+1 WHERE id=%s",
         (site_id,)
     )
 
     c.execute(
-        "INSERT INTO visits(user_id,site_id,timestamp) VALUES (?,?,?)",
+        "INSERT INTO visits(user_id,site_id,timestamp) VALUES (%s,%s,%s)",
         (session["user_id"],site_id,now)
     )
 
@@ -254,44 +268,6 @@ def visit(site_id):
     conn.close()
 
     return redirect("/surf")
-
-# -------------------
-# BUY CREDITS
-# -------------------
-
-@app.route("/buy")
-def buy():
-
-    if "user_id" not in session:
-        return redirect("/login")
-
-    return render_template("buy.html")
-
-# -------------------
-# ANALYTICS
-# -------------------
-
-@app.route("/analytics")
-def analytics():
-
-    if "admin" not in session:
-        return redirect("/login")
-
-    conn = sqlite3.connect("database.db")
-    c = conn.cursor()
-
-    visits = c.execute("SELECT COUNT(*) FROM visits").fetchone()[0]
-    users = c.execute("SELECT COUNT(*) FROM users").fetchone()[0]
-    sites = c.execute("SELECT COUNT(*) FROM sites").fetchone()[0]
-
-    conn.close()
-
-    return render_template(
-        "analytics.html",
-        visits=visits,
-        users=users,
-        sites=sites
-    )
 
 # -------------------
 # ADMIN PANEL
@@ -303,10 +279,11 @@ def admin():
     if "admin" not in session:
         return redirect("/login")
 
-    conn = sqlite3.connect("database.db")
+    conn = get_db()
     c = conn.cursor()
 
-    users = c.execute("SELECT * FROM users").fetchall()
+    c.execute("SELECT * FROM users")
+    users = c.fetchall()
 
     conn.close()
 
@@ -324,11 +301,11 @@ def addcredits(user_id):
 
     amount = request.form["amount"]
 
-    conn = sqlite3.connect("database.db")
+    conn = get_db()
     c = conn.cursor()
 
     c.execute(
-        "UPDATE users SET credits = credits + ? WHERE id=?",
+        "UPDATE users SET credits = credits + %s WHERE id=%s",
         (amount,user_id)
     )
 
@@ -347,10 +324,10 @@ def ban(user_id):
     if "admin" not in session:
         return redirect("/login")
 
-    conn = sqlite3.connect("database.db")
+    conn = get_db()
     c = conn.cursor()
 
-    c.execute("DELETE FROM users WHERE id=?", (user_id,))
+    c.execute("DELETE FROM users WHERE id=%s", (user_id,))
 
     conn.commit()
     conn.close()
