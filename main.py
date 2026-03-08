@@ -37,6 +37,15 @@ def init_db():
     )
     """)
 
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS visits(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        site_id INTEGER,
+        timestamp INTEGER
+    )
+    """)
+
     conn.commit()
     conn.close()
 
@@ -105,10 +114,8 @@ def login():
         conn.close()
 
         if user:
-
             session["user_id"] = user[0]
             session["username"] = user[1]
-
             return redirect("/dashboard")
 
     return render_template("login.html")
@@ -169,11 +176,14 @@ def addsite():
     return redirect("/dashboard")
 
 # -------------------------
-# SURF
+# AUTOSURF
 # -------------------------
 
 @app.route("/surf")
 def surf():
+
+    if "user_id" not in session:
+        return redirect("/login")
 
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
@@ -210,10 +220,35 @@ def visit(site_id):
         (site_id,)
     )
 
+    c.execute(
+        "INSERT INTO visits(user_id,site_id,timestamp) VALUES (?,?,?)",
+        (session["user_id"],site_id,int(time.time()))
+    )
+
     conn.commit()
     conn.close()
 
     return redirect("/surf")
+
+# -------------------------
+# RANKING
+# -------------------------
+
+@app.route("/ranking")
+def ranking():
+
+    conn = sqlite3.connect("database.db")
+    c = conn.cursor()
+
+    c.execute(
+        "SELECT username,total_views FROM users ORDER BY total_views DESC LIMIT 10"
+    )
+
+    users = c.fetchall()
+
+    conn.close()
+
+    return render_template("ranking.html",users=users)
 
 # -------------------------
 # ADMIN
@@ -234,6 +269,26 @@ def admin():
     conn.close()
 
     return render_template("admin.html",users=users)
+
+# -------------------------
+# ADMIN ADD CREDIT
+# -------------------------
+
+@app.route("/addcredit/<int:user_id>")
+def addcredit(user_id):
+
+    conn = sqlite3.connect("database.db")
+    c = conn.cursor()
+
+    c.execute(
+        "UPDATE users SET credits=credits+100 WHERE id=?",
+        (user_id,)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/admin")
 
 # -------------------------
 
