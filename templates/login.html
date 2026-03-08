@@ -1,26 +1,80 @@
 <!DOCTYPE html>
 <html>
 
+<head>
+
+<title>Login</title>
+
+<style>
+
+body{
+
+margin:0;
+font-family:Arial;
+
+background-image:url("https://images.unsplash.com/photo-1518770660439-4636190af475");
+background-size:cover;
+background-position:center;
+
+height:100vh;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+}
+
+.box{
+
+background:rgba(0,0,0,0.8);
+padding:40px;
+border-radius:10px;
+width:300px;
+text-align:center;
+color:white;
+
+}
+
+input{
+
+width:100%;
+padding:10px;
+margin-top:10px;
+
+}
+
+button{
+
+margin-top:15px;
+padding:10px;
+width:100%;
+background:#22c55e;
+border:none;
+color:white;
+
+}
+
+</style>
+
+</head>
+
 <body>
+
+<div class="box">
 
 <h2>Login</h2>
 
-<form method="post">
+<form action="/login" method="post">
 
-<input name="username" placeholder="Usuário">
+<input name="email" placeholder="Email">
 
-<br><br>
+<input name="password" type="password" placeholder="Senha">
 
-<input type="password" name="password" placeholder="Senha">
-
-<br><br>
-
-<button type="submit">
-Entrar
-</button>
+<button>Entrar</button>
 
 </form>
 
-</body>
+</div>
 
+</body>
 </html>
