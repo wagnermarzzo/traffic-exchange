@@ -1,0 +1,43 @@
+<link rel="stylesheet" href="/static/style.css">
+
+<h1>Analytics</h1>
+
+<div class="card">
+Total Visitas: {{visits}}
+</div>
+
+<div class="card">
+Usuários: {{users}}
+</div>
+
+<div class="card">
+Sites cadastrados: {{sites}}
+</div>
+
+<canvas id="chart"></canvas>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+new Chart(document.getElementById("chart"),{
+
+type:"bar",
+
+data:{
+
+labels:["Users","Sites","Visits"],
+
+datasets:[{
+
+label:"Estatísticas",
+
+data:[{{users}},{{sites}},{{visits}}]
+
+}]
+
+}
+
+})
+
+</script>
