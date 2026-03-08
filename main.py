@@ -98,8 +98,11 @@ def login():
         username = request.form["username"]
         password = request.form["password"]
 
+        # ADMIN LOGIN
         if username == ADMIN_USER and password == ADMIN_PASS:
+            session.clear()
             session["admin"] = True
+            session["username"] = username
             return redirect("/admin")
 
         conn = sqlite3.connect("database.db")
@@ -114,11 +117,21 @@ def login():
         conn.close()
 
         if user:
+            session.clear()
             session["user_id"] = user[0]
             session["username"] = user[1]
             return redirect("/dashboard")
 
     return render_template("login.html")
+
+# -------------------
+# LOGOUT
+# -------------------
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/")
 
 # -------------------
 # DASHBOARD
@@ -160,6 +173,9 @@ def dashboard():
 @app.route("/addsite", methods=["POST"])
 def addsite():
 
+    if "user_id" not in session:
+        return redirect("/login")
+
     url = request.form["url"]
 
     conn = sqlite3.connect("database.db")
@@ -196,7 +212,7 @@ def surf():
     if not site:
         return "Nenhum site cadastrado"
 
-    return render_template("surf.html",site=site)
+    return render_template("surf.html", site=site)
 
 # -------------------
 # VISIT + SPAM PROTECTION
@@ -204,6 +220,9 @@ def surf():
 
 @app.route("/visit/<int:site_id>")
 def visit(site_id):
+
+    if "user_id" not in session:
+        return redirect("/login")
 
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
@@ -215,7 +234,7 @@ def visit(site_id):
 
     now = int(time.time())
 
-    if now - user[0] < 10:
+    if user and now - user[0] < 10:
         conn.close()
         return redirect("/surf")
 
@@ -246,6 +265,9 @@ def visit(site_id):
 @app.route("/analytics")
 def analytics():
 
+    if "admin" not in session:
+        return redirect("/login")
+
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
 
@@ -268,15 +290,19 @@ def analytics():
     )
 
 # -------------------
-# PIX PAYMENT (PLACEHOLDER)
+# BUY CREDITS
 # -------------------
 
 @app.route("/buy")
 def buy():
+
+    if "user_id" not in session:
+        return redirect("/login")
+
     return render_template("buy.html")
 
 # -------------------
-# ADMIN
+# ADMIN PANEL
 # -------------------
 
 @app.route("/admin")
@@ -293,7 +319,7 @@ def admin():
 
     conn.close()
 
-    return render_template("admin.html",users=users)
+    return render_template("admin.html", users=users)
 
 # -------------------
 
