@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+
+<h1>Painel</h1>
+
+<p>Créditos: {{credits}}</p>
+
+<a href="/add">Adicionar site</a>
+
+<br><br>
+
+<a href="/surf">Ganhar créditos</a>
+
+<br><br>
+
+<a href="/logout">Sair</a>
+
+<h2>Seus sites</h2>
+
+<ul>
+
+{% for site in sites %}
+
+<li>{{site[0]}}</li>
+
+{% endfor %}
+
+</ul>
+
+</body>
+
+</html>
