@@ -1,16 +1,17 @@
 import sqlite3
 import random
+import time
 from flask import Flask, render_template, request, redirect, session
 
 app = Flask(__name__)
-app.secret_key = "troia_secret_key"
+app.secret_key = "troia_secret"
 
 ADMIN_USER = "Troia"
 ADMIN_PASS = "88691553"
 
-# -----------------------
-# BANCO DE DADOS
-# -----------------------
+# -------------------------
+# DATABASE
+# -------------------------
 
 def init_db():
 
@@ -22,7 +23,7 @@ def init_db():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT,
         password TEXT,
-        credits INTEGER DEFAULT 10
+        credits INTEGER DEFAULT 0
     )
     """)
 
@@ -30,7 +31,17 @@ def init_db():
     CREATE TABLE IF NOT EXISTS sites(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER,
-        url TEXT
+        url TEXT,
+        views INTEGER DEFAULT 0
+    )
+    """)
+
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS visits(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        site_id INTEGER,
+        timestamp INTEGER
     )
     """)
 
@@ -39,17 +50,17 @@ def init_db():
 
 init_db()
 
-# -----------------------
+# -------------------------
 # HOME
-# -----------------------
+# -------------------------
 
 @app.route("/")
 def index():
     return render_template("index.html")
 
-# -----------------------
-# REGISTRO
-# -----------------------
+# -------------------------
+# REGISTER
+# -------------------------
 
 @app.route("/register", methods=["GET","POST"])
 def register():
@@ -62,8 +73,7 @@ def register():
         conn = sqlite3.connect("database.db")
         c = conn.cursor()
 
-        c.execute("INSERT INTO users (username,password) VALUES (?,?)",(username,password))
-
+        c.execute("INSERT INTO users(username,password) VALUES (?,?)",(username,password))
         conn.commit()
         conn.close()
 
@@ -71,9 +81,9 @@ def register():
 
     return render_template("register.html")
 
-# -----------------------
+# -------------------------
 # LOGIN
-# -----------------------
+# -------------------------
 
 @app.route("/login", methods=["GET","POST"])
 def login():
@@ -83,30 +93,28 @@ def login():
         username = request.form["username"]
         password = request.form["password"]
 
-        # LOGIN ADMIN
         if username == ADMIN_USER and password == ADMIN_PASS:
-
             session["admin"] = True
             return redirect("/admin")
 
         conn = sqlite3.connect("database.db")
         c = conn.cursor()
 
-        c.execute("SELECT * FROM users WHERE username=? AND password=?",(username,password))
+        c.execute("SELECT * FROM users WHERE username=? AND password=?", (username,password))
         user = c.fetchone()
 
         conn.close()
 
         if user:
-
             session["user_id"] = user[0]
+            session["username"] = user[1]
             return redirect("/dashboard")
 
     return render_template("login.html")
 
-# -----------------------
-# DASHBOARD USUARIO
-# -----------------------
+# -------------------------
+# DASHBOARD
+# -------------------------
 
 @app.route("/dashboard")
 def dashboard():
@@ -114,51 +122,44 @@ def dashboard():
     if "user_id" not in session:
         return redirect("/login")
 
-    user_id = session["user_id"]
-
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
 
-    c.execute("SELECT credits FROM users WHERE id=?",(user_id,))
+    c.execute("SELECT credits FROM users WHERE id=?", (session["user_id"],))
     credits = c.fetchone()[0]
 
-    c.execute("SELECT url FROM sites WHERE user_id=?",(user_id,))
+    c.execute("SELECT * FROM sites WHERE user_id=?", (session["user_id"],))
     sites = c.fetchall()
 
     conn.close()
 
     return render_template("dashboard.html",credits=credits,sites=sites)
 
-# -----------------------
-# ADICIONAR SITE
-# -----------------------
+# -------------------------
+# ADD SITE
+# -------------------------
 
-@app.route("/add", methods=["GET","POST"])
-def add_site():
+@app.route("/addsite", methods=["POST"])
+def addsite():
 
-    if "user_id" not in session:
-        return redirect("/login")
+    url = request.form["url"]
 
-    if request.method == "POST":
+    conn = sqlite3.connect("database.db")
+    c = conn.cursor()
 
-        url = request.form["url"]
-        user_id = session["user_id"]
+    c.execute(
+        "INSERT INTO sites(user_id,url) VALUES (?,?)",
+        (session["user_id"],url)
+    )
 
-        conn = sqlite3.connect("database.db")
-        c = conn.cursor()
+    conn.commit()
+    conn.close()
 
-        c.execute("INSERT INTO sites (user_id,url) VALUES (?,?)",(user_id,url))
+    return redirect("/dashboard")
 
-        conn.commit()
-        conn.close()
-
-        return redirect("/dashboard")
-
-    return render_template("add.html")
-
-# -----------------------
+# -------------------------
 # SURF
-# -----------------------
+# -------------------------
 
 @app.route("/surf")
 def surf():
@@ -172,37 +173,94 @@ def surf():
     c.execute("SELECT id,url FROM sites")
     sites = c.fetchall()
 
-    conn.close()
-
     if len(sites) == 0:
-        return "Nenhum site disponível"
+        return "Nenhum site"
 
     site = random.choice(sites)
 
-    return render_template("surf.html",site=site[1],site_id=site[0])
+    conn.close()
 
-# -----------------------
-# GANHAR CREDITOS
-# -----------------------
+    return render_template("surf.html",site=site)
 
-@app.route("/reward/<site_id>")
-def reward(site_id):
+# -------------------------
+# VISIT CREDIT
+# -------------------------
+
+@app.route("/visit/<int:site_id>")
+def visit(site_id):
 
     if "user_id" not in session:
         return redirect("/login")
 
-    user_id = session["user_id"]
-
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
 
-    c.execute("UPDATE users SET credits = credits + 1 WHERE id=?",(user_id,))
+    c.execute("UPDATE users SET credits = credits + 1 WHERE id=?", (session["user_id"],))
+
+    c.execute("UPDATE sites SET views = views + 1 WHERE id=?", (site_id,))
+
+    c.execute(
+        "INSERT INTO visits(user_id,site_id,timestamp) VALUES (?,?,?)",
+        (session["user_id"],site_id,int(time.time()))
+    )
 
     conn.commit()
     conn.close()
 
     return redirect("/surf")
 
-# -----------------------
-# PAINEL ADMIN
-# -----------------------
+# -------------------------
+# BUY CREDITS (PIX)
+# -------------------------
+
+@app.route("/buy")
+def buy():
+    return render_template("buy.html")
+
+# -------------------------
+# ADMIN PANEL
+# -------------------------
+
+@app.route("/admin")
+def admin():
+
+    if "admin" not in session:
+        return redirect("/login")
+
+    conn = sqlite3.connect("database.db")
+    c = conn.cursor()
+
+    c.execute("SELECT * FROM users")
+    users = c.fetchall()
+
+    c.execute("SELECT COUNT(*) FROM visits")
+    visits = c.fetchone()[0]
+
+    c.execute("SELECT COUNT(*) FROM sites")
+    sites = c.fetchone()[0]
+
+    conn.close()
+
+    return render_template("admin.html",users=users,visits=visits,sites=sites)
+
+# -------------------------
+# ADMIN CREDIT EDIT
+# -------------------------
+
+@app.route("/addcredit/<int:user_id>")
+def addcredit(user_id):
+
+    conn = sqlite3.connect("database.db")
+    c = conn.cursor()
+
+    c.execute("UPDATE users SET credits = credits + 50 WHERE id=?", (user_id,))
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/admin")
+
+# -------------------------
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0",port=5000)
