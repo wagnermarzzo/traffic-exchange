@@ -59,6 +59,14 @@ padding:10px;
 background:#22c55e;
 border:none;
 color:white;
+cursor:pointer;
+}
+
+.site{
+background:#020617;
+padding:10px;
+margin-top:10px;
+border-radius:6px;
 }
 
 </style>
@@ -75,9 +83,7 @@ color:white;
 
 <a href="/surf">Autosurf</a>
 
-<a href="/buy">Comprar Créditos</a>
-
-<a href="/analytics">Analytics</a>
+<a href="/buycredits">Comprar Créditos</a>
 
 <a href="/logout">Sair</a>
 
@@ -107,9 +113,9 @@ color:white;
 
 <form action="/addsite" method="post">
 
-<input name="url" placeholder="https://seusite.com">
+<input name="url" placeholder="https://seusite.com" required>
 
-<button>Adicionar</button>
+<button type="submit">Adicionar</button>
 
 </form>
 
@@ -119,16 +125,25 @@ color:white;
 
 <h3>Meus Sites</h3>
 
+{% if sites %}
+
 {% for s in sites %}
 
-<p>
+<div class="site">
 
-{{s.url}}  
-Views: {{s.views}}
+<p><b>URL:</b> {{s[2]}}</p>
 
-</p>
+<p><b>Views:</b> {{s[3]}}</p>
+
+</div>
 
 {% endfor %}
+
+{% else %}
+
+<p>Nenhum site cadastrado</p>
+
+{% endif %}
 
 </div>
 
