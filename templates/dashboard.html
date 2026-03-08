@@ -1,34 +1,31 @@
-<!DOCTYPE html>
-<html>
+<link rel="stylesheet" href="/static/style.css">
 
-<body>
-
-<h1>Painel</h1>
+<h1>Dashboard</h1>
 
 <p>Créditos: {{credits}}</p>
 
-<a href="/add">Adicionar site</a>
+<a href="/surf">Começar Surf</a>
 
 <br><br>
 
-<a href="/surf">Ganhar créditos</a>
+<h2>Adicionar Site</h2>
 
-<br><br>
+<form method="post" action="/addsite">
 
-<a href="/logout">Sair</a>
+<input name="url" placeholder="https://site.com">
 
-<h2>Seus sites</h2>
+<button>Adicionar</button>
 
-<ul>
+</form>
+
+<h2>Seus Sites</h2>
 
 {% for site in sites %}
 
-<li>{{site[0]}}</li>
+<p>{{site[2]}} | Views: {{site[3]}}</p>
 
 {% endfor %}
 
-</ul>
+<br>
 
-</body>
-
-</html>
+<a href="/buy">Comprar Créditos</a>
