@@ -1,24 +1,103 @@
-<link rel="stylesheet" href="/static/style.css">
+<!DOCTYPE html>
+<html>
 
-<h1>Admin Panel</h1>
+<head>
 
-<p>Total visitas: {{visits}}</p>
-<p>Total sites: {{sites}}</p>
+<title>Admin</title>
 
-<h2>Usuários</h2>
+<style>
 
-{% for user in users %}
+body{
+margin:0;
+font-family:Arial;
+background:#0f172a;
+color:white;
+}
+
+.top{
+
+background:#020617;
+padding:20px;
+
+}
+
+.main{
+
+padding:40px;
+
+}
+
+.card{
+
+background:#1e293b;
+padding:20px;
+border-radius:10px;
+margin-bottom:20px;
+
+}
+
+input{
+padding:8px;
+}
+
+button{
+
+background:#22c55e;
+border:none;
+padding:10px 20px;
+color:white;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="top">
+
+<h2>Painel Admin</h2>
+
+<a href="/dashboard">Voltar Dashboard</a>
+
+</div>
+
+<div class="main">
+
+<div class="card">
+
+<h3>Adicionar Créditos</h3>
+
+<form action="/add_credit" method="post">
+
+<input name="email" placeholder="email usuário">
+
+<input name="value" placeholder="créditos">
+
+<button>Adicionar</button>
+
+</form>
+
+</div>
+
+<div class="card">
+
+<h3>Usuários</h3>
+
+{% for u in users %}
 
 <p>
 
-ID {{user[0]}} |
-{{user[1]}} |
-Créditos: {{user[3]}}
-
-<a href="/addcredit/{{user[0]}}">
-Adicionar 50 créditos
-</a>
+{{u}} | créditos: {{users[u]["credits"]}}
 
 </p>
 
 {% endfor %}
+
+</div>
+
+</div>
+
+</body>
+</html>
