@@ -3,25 +3,23 @@
 
 <head>
 
-<title>Surf</title>
-
 <script>
 
 let timer = 20;
 
 function countdown(){
 
-    if(timer > 0){
+if(timer > 0){
 
-        document.getElementById("timer").innerText = timer;
+document.getElementById("timer").innerText = timer;
 
-        timer--;
+timer--;
 
-    }else{
+}else{
 
-        location.reload();
+window.location="/reward/{{site_id}}"
 
-    }
+}
 
 }
 
