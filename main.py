@@ -1,5 +1,4 @@
 import sqlite3
-import random
 import time
 from flask import Flask, render_template, request, redirect, session
 
@@ -9,9 +8,9 @@ app.secret_key = "troia_secret"
 ADMIN_USER = "Troia"
 ADMIN_PASS = "88691553"
 
-# -------------------------
+# -------------------
 # DATABASE
-# -------------------------
+# -------------------
 
 def init_db():
 
@@ -24,7 +23,8 @@ def init_db():
         username TEXT,
         password TEXT,
         credits INTEGER DEFAULT 0,
-        total_views INTEGER DEFAULT 0
+        total_views INTEGER DEFAULT 0,
+        last_visit INTEGER DEFAULT 0
     )
     """)
 
@@ -51,17 +51,17 @@ def init_db():
 
 init_db()
 
-# -------------------------
+# -------------------
 # HOME
-# -------------------------
+# -------------------
 
 @app.route("/")
 def index():
     return render_template("index.html")
 
-# -------------------------
+# -------------------
 # REGISTER
-# -------------------------
+# -------------------
 
 @app.route("/register", methods=["GET","POST"])
 def register():
@@ -86,9 +86,9 @@ def register():
 
     return render_template("register.html")
 
-# -------------------------
+# -------------------
 # LOGIN
-# -------------------------
+# -------------------
 
 @app.route("/login", methods=["GET","POST"])
 def login():
@@ -120,9 +120,9 @@ def login():
 
     return render_template("login.html")
 
-# -------------------------
+# -------------------
 # DASHBOARD
-# -------------------------
+# -------------------
 
 @app.route("/dashboard")
 def dashboard():
@@ -153,9 +153,9 @@ def dashboard():
         sites=sites
     )
 
-# -------------------------
+# -------------------
 # ADD SITE
-# -------------------------
+# -------------------
 
 @app.route("/addsite", methods=["POST"])
 def addsite():
@@ -175,9 +175,9 @@ def addsite():
 
     return redirect("/dashboard")
 
-# -------------------------
-# AUTOSURF
-# -------------------------
+# -------------------
+# TRAFFIC QUEUE
+# -------------------
 
 @app.route("/surf")
 def surf():
@@ -188,21 +188,19 @@ def surf():
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
 
-    c.execute("SELECT id,url FROM sites")
-    sites = c.fetchall()
+    c.execute("SELECT id,url FROM sites ORDER BY views ASC LIMIT 1")
+    site = c.fetchone()
 
     conn.close()
 
-    if len(sites) == 0:
+    if not site:
         return "Nenhum site cadastrado"
-
-    site = random.choice(sites)
 
     return render_template("surf.html",site=site)
 
-# -------------------------
-# VISIT
-# -------------------------
+# -------------------
+# VISIT + SPAM PROTECTION
+# -------------------
 
 @app.route("/visit/<int:site_id>")
 def visit(site_id):
@@ -210,9 +208,20 @@ def visit(site_id):
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
 
-    c.execute(
-        "UPDATE users SET credits=credits+1,total_views=total_views+1 WHERE id=?",
+    user = c.execute(
+        "SELECT last_visit FROM users WHERE id=?",
         (session["user_id"],)
+    ).fetchone()
+
+    now = int(time.time())
+
+    if now - user[0] < 10:
+        conn.close()
+        return redirect("/surf")
+
+    c.execute(
+        "UPDATE users SET credits=credits+1,total_views=total_views+1,last_visit=? WHERE id=?",
+        (now,session["user_id"])
     )
 
     c.execute(
@@ -222,7 +231,7 @@ def visit(site_id):
 
     c.execute(
         "INSERT INTO visits(user_id,site_id,timestamp) VALUES (?,?,?)",
-        (session["user_id"],site_id,int(time.time()))
+        (session["user_id"],site_id,now)
     )
 
     conn.commit()
@@ -230,29 +239,45 @@ def visit(site_id):
 
     return redirect("/surf")
 
-# -------------------------
-# RANKING
-# -------------------------
+# -------------------
+# ANALYTICS
+# -------------------
 
-@app.route("/ranking")
-def ranking():
+@app.route("/analytics")
+def analytics():
 
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
 
-    c.execute(
-        "SELECT username,total_views FROM users ORDER BY total_views DESC LIMIT 10"
-    )
+    c.execute("SELECT COUNT(*) FROM visits")
+    visits = c.fetchone()[0]
 
-    users = c.fetchall()
+    c.execute("SELECT COUNT(*) FROM users")
+    users = c.fetchone()[0]
+
+    c.execute("SELECT COUNT(*) FROM sites")
+    sites = c.fetchone()[0]
 
     conn.close()
 
-    return render_template("ranking.html",users=users)
+    return render_template(
+        "analytics.html",
+        visits=visits,
+        users=users,
+        sites=sites
+    )
 
-# -------------------------
+# -------------------
+# PIX PAYMENT (PLACEHOLDER)
+# -------------------
+
+@app.route("/buy")
+def buy():
+    return render_template("buy.html")
+
+# -------------------
 # ADMIN
-# -------------------------
+# -------------------
 
 @app.route("/admin")
 def admin():
@@ -270,27 +295,7 @@ def admin():
 
     return render_template("admin.html",users=users)
 
-# -------------------------
-# ADMIN ADD CREDIT
-# -------------------------
-
-@app.route("/addcredit/<int:user_id>")
-def addcredit(user_id):
-
-    conn = sqlite3.connect("database.db")
-    c = conn.cursor()
-
-    c.execute(
-        "UPDATE users SET credits=credits+100 WHERE id=?",
-        (user_id,)
-    )
-
-    conn.commit()
-    conn.close()
-
-    return redirect("/admin")
-
-# -------------------------
+# -------------------
 
 if __name__ == "__main__":
     app.run()
