@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Surf</title>
+
+<script>
+let timer = 20;
+
+function countdown(){
+    if(timer > 0){
+        document.getElementById("timer").innerText = timer;
+        timer--;
+    }
+}
+
+setInterval(countdown,1000);
+</script>
+
+</head>
+
+<body>
+
+<h2>Assista ao site por 20 segundos</h2>
+
+<div id="timer">20</div>
+
+<iframe src="https://example.com" width="100%" height="600"></iframe>
+
+</body>
+</html>
