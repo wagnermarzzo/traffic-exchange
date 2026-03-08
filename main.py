@@ -3,11 +3,15 @@ import random
 from flask import Flask, render_template, request, redirect, session
 
 app = Flask(__name__)
-app.secret_key = "trafficsecret"
+app.secret_key = "troia_secret_key"
+
+ADMIN_USER = "Troia"
+ADMIN_PASS = "88691553"
 
 # -----------------------
 # BANCO DE DADOS
 # -----------------------
+
 def init_db():
 
     conn = sqlite3.connect("database.db")
@@ -38,6 +42,7 @@ init_db()
 # -----------------------
 # HOME
 # -----------------------
+
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -45,6 +50,7 @@ def index():
 # -----------------------
 # REGISTRO
 # -----------------------
+
 @app.route("/register", methods=["GET","POST"])
 def register():
 
@@ -57,6 +63,7 @@ def register():
         c = conn.cursor()
 
         c.execute("INSERT INTO users (username,password) VALUES (?,?)",(username,password))
+
         conn.commit()
         conn.close()
 
@@ -67,6 +74,7 @@ def register():
 # -----------------------
 # LOGIN
 # -----------------------
+
 @app.route("/login", methods=["GET","POST"])
 def login():
 
@@ -74,6 +82,12 @@ def login():
 
         username = request.form["username"]
         password = request.form["password"]
+
+        # LOGIN ADMIN
+        if username == ADMIN_USER and password == ADMIN_PASS:
+
+            session["admin"] = True
+            return redirect("/admin")
 
         conn = sqlite3.connect("database.db")
         c = conn.cursor()
@@ -86,14 +100,14 @@ def login():
         if user:
 
             session["user_id"] = user[0]
-
             return redirect("/dashboard")
 
     return render_template("login.html")
 
 # -----------------------
-# DASHBOARD
+# DASHBOARD USUARIO
 # -----------------------
+
 @app.route("/dashboard")
 def dashboard():
 
@@ -118,6 +132,7 @@ def dashboard():
 # -----------------------
 # ADICIONAR SITE
 # -----------------------
+
 @app.route("/add", methods=["GET","POST"])
 def add_site():
 
@@ -133,6 +148,7 @@ def add_site():
         c = conn.cursor()
 
         c.execute("INSERT INTO sites (user_id,url) VALUES (?,?)",(user_id,url))
+
         conn.commit()
         conn.close()
 
@@ -143,6 +159,7 @@ def add_site():
 # -----------------------
 # SURF
 # -----------------------
+
 @app.route("/surf")
 def surf():
 
@@ -165,8 +182,9 @@ def surf():
     return render_template("surf.html",site=site[1],site_id=site[0])
 
 # -----------------------
-# GANHAR CRÉDITO
+# GANHAR CREDITOS
 # -----------------------
+
 @app.route("/reward/<site_id>")
 def reward(site_id):
 
@@ -179,24 +197,12 @@ def reward(site_id):
     c = conn.cursor()
 
     c.execute("UPDATE users SET credits = credits + 1 WHERE id=?",(user_id,))
-    conn.commit()
 
+    conn.commit()
     conn.close()
 
     return redirect("/surf")
 
 # -----------------------
-# LOGOUT
+# PAINEL ADMIN
 # -----------------------
-@app.route("/logout")
-def logout():
-
-    session.clear()
-
-    return redirect("/")
-
-# -----------------------
-# RUN
-# -----------------------
-if __name__ == "__main__":
-    app.run(host="0.0.0.0",port=5000)
