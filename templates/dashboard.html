@@ -2,41 +2,25 @@
 
 <h1>Dashboard</h1>
 
-<div class="card">
-
 <p>Créditos: {{credits}}</p>
 <p>Total Views: {{views}}</p>
 
-</div>
-
 <a href="/surf">Iniciar Autosurf</a>
 
-<br><br>
+<h2>Adicionar site</h2>
 
-<h2>Adicionar Site</h2>
+<form action="/addsite" method="post">
 
-<form method="post" action="/addsite">
-
-<input name="url" placeholder="https://site.com">
+<input name="url" placeholder="https://site.com" required>
 
 <button>Adicionar</button>
 
 </form>
 
-<h2>Seus Sites</h2>
+<h2>Seus sites</h2>
 
 {% for site in sites %}
 
-<div class="card">
-
-<p>{{site[2]}}</p>
-<p>Views: {{site[3]}}</p>
-
-</div>
+<p>{{site["url"]}} | Views: {{site["views"]}}</p>
 
 {% endfor %}
-
-<br>
-
-<a href="/ranking">Ranking</a> |
-<a href="/buy">Comprar Créditos</a>
