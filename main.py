@@ -9,9 +9,9 @@ app.secret_key = "troia_secret"
 ADMIN_USER = "Troia"
 ADMIN_PASS = "88691553"
 
-# --------------------
+# -------------------
 # DATABASE
-# --------------------
+# -------------------
 
 def init_db():
 
@@ -51,17 +51,17 @@ def init_db():
 
 init_db()
 
-# --------------------
+# -------------------
 # HOME
-# --------------------
+# -------------------
 
 @app.route("/")
 def index():
     return render_template("index.html")
 
-# --------------------
+# -------------------
 # REGISTER
-# --------------------
+# -------------------
 
 @app.route("/register", methods=["GET","POST"])
 def register():
@@ -86,9 +86,9 @@ def register():
 
     return render_template("register.html")
 
-# --------------------
+# -------------------
 # LOGIN
-# --------------------
+# -------------------
 
 @app.route("/login", methods=["GET","POST"])
 def login():
@@ -111,18 +111,21 @@ def login():
         )
 
         user = c.fetchone()
+
         conn.close()
 
         if user:
+
             session["user_id"] = user[0]
             session["username"] = user[1]
+
             return redirect("/dashboard")
 
     return render_template("login.html")
 
-# --------------------
+# -------------------
 # DASHBOARD
-# --------------------
+# -------------------
 
 @app.route("/dashboard")
 def dashboard():
@@ -131,26 +134,23 @@ def dashboard():
         return redirect("/login")
 
     conn = sqlite3.connect("database.db")
+    conn.row_factory = sqlite3.Row
     c = conn.cursor()
 
-    c.execute(
+    user = c.execute(
         "SELECT credits,total_views FROM users WHERE id=?",
         (session["user_id"],)
-    )
+    ).fetchone()
 
-    data = c.fetchone()
-
-    credits = data[0]
-    views = data[1]
-
-    c.execute(
+    sites = c.execute(
         "SELECT * FROM sites WHERE user_id=?",
         (session["user_id"],)
-    )
-
-    sites = c.fetchall()
+    ).fetchall()
 
     conn.close()
+
+    credits = user["credits"]
+    views = user["total_views"]
 
     return render_template(
         "dashboard.html",
@@ -159,12 +159,15 @@ def dashboard():
         sites=sites
     )
 
-# --------------------
+# -------------------
 # ADD SITE
-# --------------------
+# -------------------
 
 @app.route("/addsite", methods=["POST"])
 def addsite():
+
+    if "user_id" not in session:
+        return redirect("/login")
 
     url = request.form["url"]
 
@@ -181,9 +184,9 @@ def addsite():
 
     return redirect("/dashboard")
 
-# --------------------
+# -------------------
 # SURF
-# --------------------
+# -------------------
 
 @app.route("/surf")
 def surf():
@@ -195,22 +198,20 @@ def surf():
     c = conn.cursor()
 
     c.execute("SELECT id,url FROM sites")
-
     sites = c.fetchall()
 
+    conn.close()
+
     if len(sites) == 0:
-        conn.close()
         return "Nenhum site cadastrado"
 
     site = random.choice(sites)
 
-    conn.close()
-
     return render_template("surf.html",site=site)
 
-# --------------------
+# -------------------
 # VISIT
-# --------------------
+# -------------------
 
 @app.route("/visit/<int:site_id>")
 def visit(site_id):
@@ -241,37 +242,9 @@ def visit(site_id):
 
     return redirect("/surf")
 
-# --------------------
-# RANKING
-# --------------------
-
-@app.route("/ranking")
-def ranking():
-
-    conn = sqlite3.connect("database.db")
-    c = conn.cursor()
-
-    c.execute(
-        "SELECT username,total_views FROM users ORDER BY total_views DESC LIMIT 10"
-    )
-
-    users = c.fetchall()
-
-    conn.close()
-
-    return render_template("ranking.html",users=users)
-
-# --------------------
-# BUY
-# --------------------
-
-@app.route("/buy")
-def buy():
-    return render_template("buy.html")
-
-# --------------------
+# -------------------
 # ADMIN
-# --------------------
+# -------------------
 
 @app.route("/admin")
 def admin():
@@ -285,24 +258,13 @@ def admin():
     c.execute("SELECT * FROM users")
     users = c.fetchall()
 
-    c.execute("SELECT COUNT(*) FROM visits")
-    visits = c.fetchone()[0]
-
-    c.execute("SELECT COUNT(*) FROM sites")
-    sites = c.fetchone()[0]
-
     conn.close()
 
-    return render_template(
-        "admin.html",
-        users=users,
-        visits=visits,
-        sites=sites
-    )
+    return render_template("admin.html",users=users)
 
-# --------------------
-# ADD CREDIT
-# --------------------
+# -------------------
+# ADD CREDIT ADMIN
+# -------------------
 
 @app.route("/addcredit/<int:user_id>")
 def addcredit(user_id):
@@ -320,7 +282,7 @@ def addcredit(user_id):
 
     return redirect("/admin")
 
-# --------------------
+# -------------------
 
 if __name__ == "__main__":
     app.run()
