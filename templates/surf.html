@@ -1,29 +1,98 @@
-<link rel="stylesheet" href="/static/style.css">
+<!DOCTYPE html>
+<html>
 
-<h2>Autosurf</h2>
+<head>
 
-<p>Aguarde 15 segundos</p>
+<title>Autosurf</title>
 
-<h1 id="timer">15</h1>
+<style>
 
-<iframe src="{{site[1]}}" width="100%" height="600"></iframe>
+body{
+margin:0;
+font-family:Arial;
+background:#0f172a;
+color:white;
+text-align:center;
+}
 
-<script>
+.top{
 
-let t = 15
-
-setInterval(()=>{
-
-t--
-
-document.getElementById("timer").innerText = t
-
-if(t==0){
-
-window.location="/visit/{{site[0]}}"
+background:#020617;
+padding:15px;
 
 }
 
-},1000)
+iframe{
+
+width:100%;
+height:600px;
+border:none;
+
+}
+
+.timer{
+
+background:#1e293b;
+padding:15px;
+
+}
+
+button{
+
+padding:10px 20px;
+background:#22c55e;
+border:none;
+color:white;
+margin-top:10px;
+
+}
+
+</style>
+
+<script>
+
+let time = 10;
+
+function countdown(){
+
+document.getElementById("timer").innerText = time;
+
+time--;
+
+if(time < 0){
+
+window.location.href = "/visit/{{site[0]}}";
+
+}
+
+}
+
+setInterval(countdown,1000);
 
 </script>
+
+</head>
+
+<body>
+
+<div class="top">
+
+<h2>Autosurf</h2>
+
+<a href="/dashboard" style="color:white">Voltar Dashboard</a>
+
+</div>
+
+<div class="timer">
+
+Tempo restante:
+
+<span id="timer">10</span>
+
+</div>
+
+<iframe src="{{site[1]}}"></iframe>
+
+</body>
+
+</html>
