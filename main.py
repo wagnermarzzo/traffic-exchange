@@ -98,11 +98,9 @@ def login():
         username = request.form["username"]
         password = request.form["password"]
 
-        # ADMIN LOGIN
         if username == ADMIN_USER and password == ADMIN_PASS:
             session.clear()
             session["admin"] = True
-            session["username"] = username
             return redirect("/admin")
 
         conn = sqlite3.connect("database.db")
@@ -119,7 +117,6 @@ def login():
         if user:
             session.clear()
             session["user_id"] = user[0]
-            session["username"] = user[1]
             return redirect("/dashboard")
 
     return render_template("login.html")
@@ -192,7 +189,7 @@ def addsite():
     return redirect("/dashboard")
 
 # -------------------
-# TRAFFIC QUEUE
+# AUTOSURF
 # -------------------
 
 @app.route("/surf")
@@ -215,7 +212,7 @@ def surf():
     return render_template("surf.html", site=site)
 
 # -------------------
-# VISIT + SPAM PROTECTION
+# VISIT
 # -------------------
 
 @app.route("/visit/<int:site_id>")
@@ -259,6 +256,18 @@ def visit(site_id):
     return redirect("/surf")
 
 # -------------------
+# BUY CREDITS
+# -------------------
+
+@app.route("/buy")
+def buy():
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    return render_template("buy.html")
+
+# -------------------
 # ANALYTICS
 # -------------------
 
@@ -271,14 +280,9 @@ def analytics():
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
 
-    c.execute("SELECT COUNT(*) FROM visits")
-    visits = c.fetchone()[0]
-
-    c.execute("SELECT COUNT(*) FROM users")
-    users = c.fetchone()[0]
-
-    c.execute("SELECT COUNT(*) FROM sites")
-    sites = c.fetchone()[0]
+    visits = c.execute("SELECT COUNT(*) FROM visits").fetchone()[0]
+    users = c.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+    sites = c.execute("SELECT COUNT(*) FROM sites").fetchone()[0]
 
     conn.close()
 
@@ -288,18 +292,6 @@ def analytics():
         users=users,
         sites=sites
     )
-
-# -------------------
-# BUY CREDITS
-# -------------------
-
-@app.route("/buy")
-def buy():
-
-    if "user_id" not in session:
-        return redirect("/login")
-
-    return render_template("buy.html")
 
 # -------------------
 # ADMIN PANEL
@@ -314,12 +306,56 @@ def admin():
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
 
-    c.execute("SELECT * FROM users")
-    users = c.fetchall()
+    users = c.execute("SELECT * FROM users").fetchall()
 
     conn.close()
 
     return render_template("admin.html", users=users)
+
+# -------------------
+# ADMIN ADD CREDITS
+# -------------------
+
+@app.route("/admin/addcredits/<int:user_id>", methods=["POST"])
+def addcredits(user_id):
+
+    if "admin" not in session:
+        return redirect("/login")
+
+    amount = request.form["amount"]
+
+    conn = sqlite3.connect("database.db")
+    c = conn.cursor()
+
+    c.execute(
+        "UPDATE users SET credits = credits + ? WHERE id=?",
+        (amount,user_id)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/admin")
+
+# -------------------
+# ADMIN BAN
+# -------------------
+
+@app.route("/admin/ban/<int:user_id>")
+def ban(user_id):
+
+    if "admin" not in session:
+        return redirect("/login")
+
+    conn = sqlite3.connect("database.db")
+    c = conn.cursor()
+
+    c.execute("DELETE FROM users WHERE id=?", (user_id,))
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/admin")
 
 # -------------------
 
