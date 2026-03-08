@@ -15,64 +15,64 @@ color:white;
 }
 
 .sidebar{
-
 width:230px;
 height:100vh;
 background:#020617;
 position:fixed;
-
 }
 
 .sidebar h2{
-
 text-align:center;
 padding:20px;
-
 }
 
 .sidebar a{
-
 display:block;
 padding:15px;
 color:white;
 text-decoration:none;
-
 }
 
 .sidebar a:hover{
-
 background:#1e293b;
-
 }
 
 .main{
-
 margin-left:230px;
 padding:40px;
-
 }
 
 .card{
-
 background:#1e293b;
 padding:20px;
 border-radius:10px;
-margin-bottom:20px;
-
 }
 
 table{
-
 width:100%;
 border-collapse:collapse;
-
 }
 
 td{
-
 padding:10px;
 border-bottom:1px solid #334155;
+}
 
+input{
+width:70px;
+padding:5px;
+}
+
+button{
+background:#22c55e;
+border:none;
+padding:6px 10px;
+color:white;
+cursor:pointer;
+}
+
+.ban{
+background:#ef4444;
 }
 
 </style>
@@ -101,8 +101,6 @@ border-bottom:1px solid #334155;
 
 <div class="card">
 
-<h3>Usuários</h3>
-
 <table>
 
 <tr>
@@ -111,6 +109,8 @@ border-bottom:1px solid #334155;
 <td>Usuário</td>
 <td>Créditos</td>
 <td>Views</td>
+<td>Adicionar Créditos</td>
+<td>Banir</td>
 
 </tr>
 
@@ -119,9 +119,34 @@ border-bottom:1px solid #334155;
 <tr>
 
 <td>{{u[0]}}</td>
+
 <td>{{u[1]}}</td>
+
 <td>{{u[3]}}</td>
+
 <td>{{u[4]}}</td>
+
+<td>
+
+<form action="/admin/addcredits/{{u[0]}}" method="post">
+
+<input name="amount" value="100">
+
+<button>Adicionar</button>
+
+</form>
+
+</td>
+
+<td>
+
+<a href="/admin/ban/{{u[0]}}">
+
+<button class="ban">Banir</button>
+
+</a>
+
+</td>
 
 </tr>
 
@@ -135,4 +160,4 @@ border-bottom:1px solid #334155;
 
 </body>
 
-  </html>
+</html>
