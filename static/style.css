@@ -1,17 +1,30 @@
 body{
 font-family:Arial;
-background:#111;
+background:#0f172a;
 color:white;
 text-align:center;
 }
 
+h1{
+color:#22c55e;
+}
+
 a{
-color:#00ff9c;
+color:#22c55e;
+text-decoration:none;
 }
 
 button{
-background:#00ff9c;
+background:#22c55e;
 border:none;
 padding:10px 20px;
+border-radius:5px;
 cursor:pointer;
+}
+
+.card{
+background:#1e293b;
+padding:20px;
+margin:20px;
+border-radius:10px;
 }
