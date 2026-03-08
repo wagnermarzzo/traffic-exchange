@@ -1,42 +1,29 @@
-<!DOCTYPE html>
-<html>
+<link rel="stylesheet" href="/static/style.css">
 
-<head>
+<h2>Autosurf</h2>
 
-<script>
-
-let timer = 20;
-
-function countdown(){
-
-if(timer > 0){
-
-document.getElementById("timer").innerText = timer;
-
-timer--;
-
-}else{
-
-window.location="/reward/{{site_id}}"
-
-}
-
-}
-
-setInterval(countdown,1000);
-
-</script>
-
-</head>
-
-<body>
-
-<h2>Assista ao site por 20 segundos</h2>
+<p>Aguarde 20 segundos</p>
 
 <h1 id="timer">20</h1>
 
-<iframe src="{{site}}" width="100%" height="600"></iframe>
+<iframe src="{{site[1]}}" width="100%" height="600"></iframe>
 
-</body>
+<script>
 
-</html>
+let t = 20
+
+setInterval(()=>{
+
+t--
+
+document.getElementById("timer").innerText = t
+
+if(t==0){
+
+window.location="/visit/{{site[0]}}"
+
+}
+
+},1000)
+
+</script>
