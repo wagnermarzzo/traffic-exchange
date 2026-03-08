@@ -15,12 +15,10 @@ color:white;
 }
 
 .sidebar{
-
-width:240px;
+width:230px;
 height:100vh;
 background:#020617;
 position:fixed;
-
 }
 
 .sidebar h2{
@@ -29,12 +27,10 @@ padding:20px;
 }
 
 .sidebar a{
-
 display:block;
 padding:15px;
 color:white;
 text-decoration:none;
-
 }
 
 .sidebar a:hover{
@@ -42,19 +38,27 @@ background:#1e293b;
 }
 
 .main{
-
-margin-left:240px;
+margin-left:230px;
 padding:40px;
-
 }
 
 .card{
-
 background:#1e293b;
-padding:30px;
+padding:25px;
 border-radius:10px;
 margin-bottom:20px;
+}
 
+input{
+padding:10px;
+width:70%;
+}
+
+button{
+padding:10px;
+background:#22c55e;
+border:none;
+color:white;
 }
 
 </style>
@@ -68,9 +72,14 @@ margin-bottom:20px;
 <h2>Autosurf</h2>
 
 <a href="/dashboard">Dashboard</a>
+
+<a href="/surf">Autosurf</a>
+
 <a href="/buy">Comprar Créditos</a>
+
+<a href="/analytics">Analytics</a>
+
 <a href="/logout">Sair</a>
-<a href="/admin">Admin</a>
 
 </div>
 
@@ -80,15 +89,46 @@ margin-bottom:20px;
 
 <div class="card">
 
-<h3>Email</h3>
-<p>{{email}}</p>
+<h3>Créditos</h3>
+<p>{{credits}}</p>
 
 </div>
 
 <div class="card">
 
-<h3>Créditos</h3>
-<p>{{credits}}</p>
+<h3>Total Views</h3>
+<p>{{views}}</p>
+
+</div>
+
+<div class="card">
+
+<h3>Adicionar meu site</h3>
+
+<form action="/addsite" method="post">
+
+<input name="url" placeholder="https://seusite.com">
+
+<button>Adicionar</button>
+
+</form>
+
+</div>
+
+<div class="card">
+
+<h3>Meus Sites</h3>
+
+{% for s in sites %}
+
+<p>
+
+{{s.url}}  
+Views: {{s.views}}
+
+</p>
+
+{% endfor %}
 
 </div>
 
