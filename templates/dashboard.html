@@ -1,17 +1,32 @@
 <link rel="stylesheet" href="/static/style.css">
 
+<div class="sidebar">
+
+<h2>Painel</h2>
+
+<a href="/dashboard">Dashboard</a>
+<a href="/surf">Autosurf</a>
+<a href="/ranking">Ranking</a>
+
+</div>
+
+<div class="content">
+
 <h1>Dashboard</h1>
 
-<p>Créditos: {{credits}}</p>
-<p>Total Views: {{views}}</p>
+<div class="card">
+Créditos: {{credits}}
+</div>
 
-<a href="/surf">Iniciar Autosurf</a>
+<div class="card">
+Total Views: {{views}}
+</div>
 
-<h2>Adicionar site</h2>
+<h2>Adicionar Site</h2>
 
 <form action="/addsite" method="post">
 
-<input name="url" placeholder="https://site.com" required>
+<input name="url" placeholder="https://site.com">
 
 <button>Adicionar</button>
 
@@ -21,6 +36,41 @@
 
 {% for site in sites %}
 
-<p>{{site["url"]}} | Views: {{site["views"]}}</p>
+<div class="card">
+
+{{site["url"]}}  
+Views: {{site["views"]}}
+
+</div>
 
 {% endfor %}
+
+<canvas id="stats"></canvas>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+new Chart(document.getElementById("stats"),{
+
+type:"bar",
+
+data:{
+
+labels:["Views"],
+
+datasets:[{
+
+label:"Total",
+
+data:[{{views}}]
+
+}]
+
+}
+
+})
+
+</script>
