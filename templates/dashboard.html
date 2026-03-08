@@ -1,76 +1,98 @@
-<link rel="stylesheet" href="/static/style.css">
+<!DOCTYPE html>
+<html>
 
-<div class="sidebar">
+<head>
 
-<h2>Painel</h2>
+<title>Dashboard</title>
 
-<a href="/dashboard">Dashboard</a>
-<a href="/surf">Autosurf</a>
-<a href="/ranking">Ranking</a>
+<style>
 
-</div>
+body{
+margin:0;
+font-family:Arial;
+background:#0f172a;
+color:white;
+}
 
-<div class="content">
+.sidebar{
 
-<h1>Dashboard</h1>
-
-<div class="card">
-Créditos: {{credits}}
-</div>
-
-<div class="card">
-Total Views: {{views}}
-</div>
-
-<h2>Adicionar Site</h2>
-
-<form action="/addsite" method="post">
-
-<input name="url" placeholder="https://site.com">
-
-<button>Adicionar</button>
-
-</form>
-
-<h2>Seus sites</h2>
-
-{% for site in sites %}
-
-<div class="card">
-
-{{site["url"]}}  
-Views: {{site["views"]}}
-
-</div>
-
-{% endfor %}
-
-<canvas id="stats"></canvas>
-
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script>
-
-new Chart(document.getElementById("stats"),{
-
-type:"bar",
-
-data:{
-
-labels:["Views"],
-
-datasets:[{
-
-label:"Total",
-
-data:[{{views}}]
-
-}]
+width:240px;
+height:100vh;
+background:#020617;
+position:fixed;
 
 }
 
-})
+.sidebar h2{
+text-align:center;
+padding:20px;
+}
 
-</script>
+.sidebar a{
+
+display:block;
+padding:15px;
+color:white;
+text-decoration:none;
+
+}
+
+.sidebar a:hover{
+background:#1e293b;
+}
+
+.main{
+
+margin-left:240px;
+padding:40px;
+
+}
+
+.card{
+
+background:#1e293b;
+padding:30px;
+border-radius:10px;
+margin-bottom:20px;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="sidebar">
+
+<h2>Autosurf</h2>
+
+<a href="/dashboard">Dashboard</a>
+<a href="/buy">Comprar Créditos</a>
+<a href="/logout">Sair</a>
+<a href="/admin">Admin</a>
+
+</div>
+
+<div class="main">
+
+<h1>Painel</h1>
+
+<div class="card">
+
+<h3>Email</h3>
+<p>{{email}}</p>
+
+</div>
+
+<div class="card">
+
+<h3>Créditos</h3>
+<p>{{credits}}</p>
+
+</div>
+
+</div>
+
+</body>
+</html>
