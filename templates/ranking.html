@@ -1,0 +1,16 @@
+<link rel="stylesheet" href="/static/style.css">
+
+<h1>Top Usuários</h1>
+
+{% for user in users %}
+
+<div class="card">
+
+<p>{{user[0]}}</p>
+<p>Total Views: {{user[1]}}</p>
+
+</div>
+
+{% endfor %}
+
+<a href="/dashboard">Voltar</a>
